@@ -1,0 +1,21 @@
+[package]
+name = "bin"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+ring = "0.16.20"
+serde = {version = "1", features = ["derive"] }
+futures-util = "0.3"
+rayon = "1"
+serde_json = "1"
+uuid = { version = "1", features = ["serde", "v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+dotenv = "0.15"
+pretty_env_logger = "0.4.0"
+log4rs = "1.2.0"
+tokio-cron-scheduler = "0.9.1"
