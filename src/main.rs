@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     // ...
 
     // TODO
-    // software update using digital signature
+    // software update using ed25519 public key digital signature
     // ...
 
 
