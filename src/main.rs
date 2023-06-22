@@ -7,6 +7,8 @@
 
 use ring::*;
 
+mod crypto;
+
 
 
 #[tokio::main]
