@@ -19,6 +19,9 @@ dotenv = "0.15"
 pretty_env_logger = "0.4.0"
 log4rs = "1.2.0"
 tokio-cron-scheduler = "0.9.1"
+env_logger = "0.10.0"
+bytes = { version = "1", features = ["serde"] }
+hex = "0.4"
 
 
 [[bin]]
