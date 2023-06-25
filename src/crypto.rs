@@ -2,6 +2,7 @@
 
 
 use crate::*;
+use constants::KEYPAIR;
 
 
 /*
@@ -36,6 +37,98 @@ pub fn from_u8_to_hex_string(bytes: &[u8]) -> Result<String, ()> { //// take a r
     
     use hex::*;
     
+    let msg = "get";
+    let msg_bytes = msg.as_bytes();
+    /* 
+
+        `get` payload in hex will be 0x676574 since `g` is 67 in hex
+        which is 103 in decimal which is in form of utf8 bytes means that 
+        every char in form of utf8 bytes must be in range 0 up to 255
+        also every char in hex is 4 bits in binary which means every two
+        chars in hex is 1 byte in utf8 bytes thus 0x676574 is 3 bytes in 
+        form of utf8 bytes also chars can be represented in form of utf16 
+        or 2 bytes long, like `get` is 0xfeff0067feff0065feff0074 in hex which
+        is 12 bytes long or 24 hex chars because `get` has 3 chars which in 
+        utf16 form every char has size of 2 bytes which is 4 chars in hex 
+        thus 3 * 4 = 12 bytes in total for 3 chars in utf16 form.
+
+    */
+    let playload_hex_ascii = msg_bytes.iter().map(|b| format!("{:x}", b)).collect::<String>();
+    println!("{playload_hex_ascii:}");
+
+
+    ///// -------------- union, enum and struct -------------- /////
+    /*
+        offset is the size in bytes and in order to get
+        the starting offset of a type or struct instance 
+        we can get a raw pointer (since smart pointer in rust 
+        will be coerced to raw pointers at compile time) 
+        to the instance then cast that pointer to usize 
+        which is the size in bytes of the instance pointer itself
+    */
+    
+    /*
+        a pointer contains the memory address of an obejct
+        and it has either 32 or 64 bits (depends on the os arc)
+        size hence we can get it's size by casting it into the 
+        usize type that contains the size of that pointer in bytes
+        inside the stack
+    */
+ 
+    struct Object{
+        a: u8, //// we can fill this in a hex form
+        b: u16, //// we can fill this in a hex form
+        c: u32, //// we can fill this in a hex form
+    }
+
+    // utf8 hex representation
+    let obj = Object{
+        /*
+            since `a` field is of type u8 thus we have to fill 
+            it with only two chars in hex since every 4 bits 
+            in base 2 is a hex char; the 0xaa is 170 in decimal
+            0xaa is one byte or 8 bits
+        */
+        a: 0xaa, 
+        /*
+            since `b` field is of type u16 thus we have to fill 
+            it with only four chars in hex since every 4 bits 
+            in base 2 is a hex char; the 0xaa is 48059 in decimal
+            0xbbbb is two bytes or 16 bits
+        */
+        b: 0xbbbb, 
+        /*
+            since `c` field is of type u32 thus we have to fill 
+            it with only eight chars in hex since every 4 bits 
+            in base 2 is a hex char; the 0xcccccccc is 3435973836 in decimal
+            0xcccccccc is two bytes or 32 bits
+        */
+        c: 0xcccccccc
+    };
+
+    /*
+        usize is an unsigned size which is big enough
+        to store any pointer and in 32 bits arch is 4 bytes
+        and in 64 bits is 8 bytes also each usize contains 
+        the size in bytes in either 32 or 64 bits format
+    //
+        base is the usize pointer of the object itself 
+        which contains the size of the starting offset 
+        in bytes in memory, we've just cast the pointer 
+        to the location of the obj instance into the usize
+        to get the size of its pointer in bytes which is the 
+        starting offset of all its fields
+    */
+    let base = &obj as *const _ as usize; //// we're considering the pointer of the obj instance as the starting point of the offset by converting its pointer into usize 
+    let a_off = &obj.a as *const _ as usize - base; //// this is the `a` field offset by subtracting its usize pointer (cast its *const pointer to usize) from the base offset
+    let b_off = &obj.b as *const _ as usize - base; //// this is the `b` field offset by subtracting its usize pointer (cast its *const pointer to usize) from the base offset
+    let c_off = &obj.c as *const _ as usize - base; //// this is the `c` field offset by subtracting its usize pointer (cast its *const pointer to usize) from the base offset
+    println!("base: {}", base); 
+    println!("a: {}", a_off as usize - base);
+    println!("b: {}", b_off as usize - base);
+    println!("c: {}", c_off as usize - base);
+
+
     /*
         let hex_ascii_string = "hello world".as_bytes().iter().map(|x| format!("{:02x}", x)).collect::<String>()
         >> let mut s = String::new();
@@ -79,15 +172,30 @@ pub fn from_hex_string_to_u16(s: &str) -> Result<Vec<u16>, std::num::ParseIntErr
 }
 
 
-struct Keypair;
-struct Pubkey;
-struct Prvkey;
-impl Keypair{
-    fn new() -> (Pubkey, Prvkey){
-        (Pubkey, Prvkey)
+
+/* ED25519 implementation using ring */
+struct Payma{
+    pub keypair: &'static Ed25519KeyPair,
+}
+
+impl Payma{
+    fn new() -> Self{
+        
+        let keypair = KEYPAIR.as_ref();
+        let Ok(keys) = keypair else{
+            panic!("can't generate keypair due to: {:?}", keypair.unwrap_err());
+        };
+
+        Self { keypair: keys }
+        
+    }
+
+    fn sign(&self, data: &str) -> Vec<u8>{
+
+
+        let signature = self.keypair.sign(data.as_bytes());
+        signature.as_ref().to_vec()
+
+
     }
 }
-// let keypairs: (Pubkey, Prvkey) = Keypair::new();
-// use private key to sign the data 
-// use public key to verify the signature
-// use seed phrase to generate both keys
