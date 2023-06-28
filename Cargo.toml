@@ -42,3 +42,11 @@ path = "src/main.rs"
 crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 name = "daemon"
+
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1
+overflow-checks = true # panic on any overflow
