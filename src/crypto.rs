@@ -40,6 +40,7 @@ pub fn from_u8_to_hex_string(bytes: &[u8]) -> Result<String, ()> { //// take a r
     let msg = "get";
     let msg_bytes = msg.as_bytes();
     /* 
+                    hex representation of u16 and u8 bits
 
         `get` payload in hex will be 0x676574 since `g` is 67 in hex
         which is 103 in decimal which is in form of utf8 bytes means that 
