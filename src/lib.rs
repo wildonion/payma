@@ -25,3 +25,9 @@
 //    --- seed phrase can be used to generate the keypairs 
 //    --- public key can be used to verify the signature agains the utf8 bytes of data
 // ...
+
+// ------
+// TASK 3
+// ------
+// smart contract to pay developer salary based on github commits using escrow contract
+// ...
