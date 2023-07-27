@@ -15,8 +15,20 @@ mod crypto;
 mod constants;
 
 
+/*
+    the error part of the result type is a pointer to a std Error trait 
+    bounded to Send, Sync and 'static lifetime to be shareable between
+    threads, the reason is actually we don't know the type that will cause
+    the error at runtime and in order to handle the error for that type
+    we must bound the type to this trait at runtime which can handle all
+    the possible errors of the type, also since traits are not fix sized 
+    and they're on the heap we must put them behind a pointer like &dyn Trait
+    with a valid lifetime or inside the Box like Box<dyn Trait> which has 
+    its own valid lifetime.
+*/
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    
 
     Ok(())
 

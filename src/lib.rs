@@ -30,4 +30,11 @@
 // TASK 3
 // ------
 // smart contract to pay developer salary based on github commits using escrow contract
+/*
+    1 - generate keypair for both parties
+    2 - employee deposit the full payment into this contract 
+    3 - the whole moeny will be mapped to the contractor in this contract
+    4 - on every 10 commits, confirmed by the employee full/10 will be transferred to the contractor
+    5 - we run step 4 inside a loop{} until all the moeny gets paid to the contractor
+*/
 // ...
