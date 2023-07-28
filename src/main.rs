@@ -9,6 +9,7 @@ use std::fmt::Write;
 use ring::{signature as ring_signature, rand as ring_rand};
 use ring::signature::Ed25519KeyPair;
 use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 
 
 mod crypto;
@@ -29,6 +30,27 @@ mod constants;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     
+    #[derive(Serialize, Deserialize)]
+    struct Data{
+        pub repo: String,
+        pub commits: u16,
+        pub budget: u16 
+    }
+    let data = Data{
+        repo: "github repo containing the code".to_string(), 
+        commits: 0u16,
+        budget: 50
+    };
+    let stringify_data = serde_json::to_string(&data).unwrap();
+
+    let contract = crypto::Contract::new("wildonion");
+    let signature_bytes = contract.sign(stringify_data.as_str());
+    
+    let signature = std::str::from_utf8(&signature_bytes).unwrap();
+    let is_verified = contract.is_valid_transaction(signature_bytes, stringify_data.as_str());
+
+
+
 
     Ok(())
 

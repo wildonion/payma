@@ -53,6 +53,10 @@ pub fn string_to_static_str(s: String) -> &'static str {
         leaking the memory of the heap data String which allows us to have an 
         unfreed allocation that can be used to define static str using it since
         static means we have static lifetime during the whole lifetime of the app
+        and reaching this using String is not possible because heap data types 
+        will be dropped from the heap once their lifetime destroyed in a scope
+        like by moving them into another scope hence they can't be live longer 
+        than static lifetime
     */
     Box::leak(s.into_boxed_str()) 
 }
@@ -206,14 +210,14 @@ pub fn from_hex_string_to_u16(s: &str) -> Result<Vec<u16>, std::num::ParseIntErr
 
 
 /* ED25519 implementation using ring */
-struct Contract{
-    pub keypair: &'static Ed25519KeyPair,
+pub struct Contract{
+    keypair: &'static Ed25519KeyPair,
     pub iat: i64,
     pub owner: &'static str
 }
 
 impl Contract{
-    fn new(owner: &str) -> Self{
+    pub fn new(owner: &str) -> Self{
         
         let static_owner = string_to_static_str(owner.to_string());
         let keypair = KEYPAIR.as_ref();
@@ -225,7 +229,7 @@ impl Contract{
         
     }
 
-    fn sign(&self, data: &str) -> Vec<u8>{
+    pub fn sign(&self, data: &str) -> Vec<u8>{
 
 
         let signature = self.keypair.sign(data.as_bytes());
@@ -234,13 +238,22 @@ impl Contract{
 
     }
 
+    pub fn is_valid_transaction(&self, sig: Vec<u8>, data: &str) -> bool{
+        self.verify_signature(sig, data)
+    }
+
     fn verify_signature(&self, sig: Vec<u8>, data: &str) -> bool{
 
         let message = data.as_bytes();
         let pubkey = self.keypair.public_key().as_ref();
         let ring_pubkey = ring_signature::UnparsedPublicKey::new(&ring_signature::ED25519, pubkey);
 
-        match ring_pubkey.verify(message, &sig){
+        /* 
+            Vec<u8> can be coerced to &[u8] slice by taking a reference to it 
+            since a pointer to the underlying Vec<u8> means taking a slice of 
+            vector with a valid lifetime
+        */
+        match ring_pubkey.verify(message, &sig){ 
             Ok(_) => true,
             Err(_) => false
         }
