@@ -4,6 +4,7 @@
 // injectable code like .so and .dll
 
 // https://github.com/skerkour/black-hat-rust/tree/main/ch_11
+// https://cryptobook.nakov.com/digital-signatures
 
 // ------
 // TASK-1

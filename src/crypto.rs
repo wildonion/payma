@@ -3,6 +3,7 @@
 
 use crate::*;
 use constants::KEYPAIR;
+use ring::signature::KeyPair;
 
 
 /*
@@ -26,11 +27,35 @@ use constants::KEYPAIR;
     >>>>>>>> u8 -> hex ascii vector using :x? in println! macro or dividing operations : u8 bytes % 16 
 
 
+
+    zero copy      ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/schemas.rs#L1621C6-L1621C6
+    data collision ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/utils.rs#L640
+
 */
 
 
 
-
+/* 
+    we cannot obtain &'static str from a String because Strings may not live 
+    for the entire life of our program, and that's what &'static lifetime means. 
+    we can only get a slice parameterized by String own lifetime from it, we can 
+    obtain a static str but it involves leaking the memory of the String. this is 
+    not something we should do lightly, by leaking the memory of the String, this 
+    guarantees that the memory will never be freed (thus the leak), therefore, any 
+    references to the inner object can be interpreted as having the 'static lifetime.
+    
+    also here it's ok to return the reference from function since our reference lifetime 
+    is static and is valid for the entire life of the app
+*/
+// TODO - Box and Pin methods
+pub fn string_to_static_str(s: String) -> &'static str { 
+    /* 
+        leaking the memory of the heap data String which allows us to have an 
+        unfreed allocation that can be used to define static str using it since
+        static means we have static lifetime during the whole lifetime of the app
+    */
+    Box::leak(s.into_boxed_str()) 
+}
 
 
 pub fn from_u8_to_hex_string(bytes: &[u8]) -> Result<String, ()> { //// take a reference from u8 and will return a hex String
@@ -181,19 +206,22 @@ pub fn from_hex_string_to_u16(s: &str) -> Result<Vec<u16>, std::num::ParseIntErr
 
 
 /* ED25519 implementation using ring */
-struct Payma{
+struct Contract{
     pub keypair: &'static Ed25519KeyPair,
+    pub iat: i64,
+    pub owner: &'static str
 }
 
-impl Payma{
-    fn new() -> Self{
+impl Contract{
+    fn new(owner: &str) -> Self{
         
+        let static_owner = string_to_static_str(owner.to_string());
         let keypair = KEYPAIR.as_ref();
         let Ok(keys) = keypair else{
             panic!("can't generate keypair due to: {:?}", keypair.unwrap_err());
         };
 
-        Self { keypair: keys }
+        Self { keypair: keys, iat: chrono::Local::now().timestamp_nanos(), owner: static_owner }
         
     }
 
@@ -205,4 +233,19 @@ impl Payma{
 
 
     }
+
+    fn verify_signature(&self, sig: Vec<u8>, data: &str) -> bool{
+
+        let message = data.as_bytes();
+        let pubkey = self.keypair.public_key().as_ref();
+        let ring_pubkey = ring_signature::UnparsedPublicKey::new(&ring_signature::ED25519, pubkey);
+
+        match ring_pubkey.verify(message, &sig){
+            Ok(_) => true,
+            Err(_) => false
+        }
+
+    }
+
+
 }
