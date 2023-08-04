@@ -46,8 +46,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     let contract = crypto::Contract::new("wildonion");
     let signature_bytes = contract.sign(stringify_data.as_str());
     
-    let signature = std::str::from_utf8(&signature_bytes).unwrap();
+    
+    let signature_hex = hex::encode(&signature_bytes);
+    let pubkey_hex = hex::encode(&contract.get_public_key());
+    let prvkey_hex = hex::encode(&contract.get_private_key());
+
+
     let is_verified = contract.is_valid_transaction(signature_bytes, stringify_data.as_str());
+
+    if is_verified{
+
+        // start the project 
+        // ...
+
+    } else{
+
+        // stop working
+        // ...
+    }
 
 
 

@@ -3,7 +3,7 @@
 
 use crate::*;
 use constants::KEYPAIR;
-use ring::signature::KeyPair;
+use ring::{signature::KeyPair, pkcs8::Document};
 
 
 /*
@@ -212,6 +212,7 @@ pub fn from_hex_string_to_u16(s: &str) -> Result<Vec<u16>, std::num::ParseIntErr
 /* ED25519 implementation using ring */
 pub struct Contract{
     keypair: &'static Ed25519KeyPair,
+    prvkey: Vec<u8>,
     pub iat: i64,
     pub owner: &'static str
 }
@@ -220,13 +221,34 @@ impl Contract{
     pub fn new(owner: &str) -> Self{
         
         let static_owner = string_to_static_str(owner.to_string());
-        let keypair = KEYPAIR.as_ref();
+        let keypair = KEYPAIR.0.as_ref();
         let Ok(keys) = keypair else{
             panic!("can't generate keypair due to: {:?}", keypair.unwrap_err());
         };
 
-        Self { keypair: keys, iat: chrono::Local::now().timestamp_nanos(), owner: static_owner }
+        /* ED25519 keypair */
+        let pubkey = keys.public_key().as_ref();
+        let prvkey = KEYPAIR.1.as_ref();
+
+        Self { keypair: keys, prvkey: prvkey.to_vec(), iat: chrono::Local::now().timestamp_nanos(), owner: static_owner }
         
+    }
+
+    pub fn get_public_key(&self) -> Vec<u8>{
+
+
+        self.keypair.public_key().as_ref().to_vec()
+
+    }
+
+    pub fn get_private_key(&self) -> Vec<u8>{
+
+        /* 
+            cloning the self to prevent from moving since returning 
+            heap data from method will move the self 
+        */
+        self.prvkey.clone()
+
     }
 
     pub fn sign(&self, data: &str) -> Vec<u8>{
@@ -257,6 +279,15 @@ impl Contract{
             Ok(_) => true,
             Err(_) => false
         }
+
+    }
+
+    pub fn generate_keys_from(&self, prv_key: &[u8]) -> Ed25519KeyPair{
+
+        /* constructing keypair from the private key */
+        let private_key = hex::decode(&prv_key).unwrap();
+        let generated_ed25519_keys = Ed25519KeyPair::from_pkcs8(private_key.as_ref()).unwrap();
+        generated_ed25519_keys
 
     }
 
