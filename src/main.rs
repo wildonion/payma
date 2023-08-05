@@ -10,10 +10,11 @@ use ring::{signature as ring_signature, rand as ring_rand};
 use ring::signature::Ed25519KeyPair;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use crypter;
 
 
-mod crypto;
 mod constants;
+mod lle;
 
 
 /*
@@ -43,10 +44,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     };
     let stringify_data = serde_json::to_string(&data).unwrap();
 
-    let contract = crypto::Contract::new("wildonion");
+    let contract = crypter::Contract::new("wildonion");
     let signature_bytes = contract.sign(stringify_data.as_str());
     
-    
+
     let signature_hex = hex::encode(&signature_bytes);
     let pubkey_hex = hex::encode(&contract.get_public_key());
     let prvkey_hex = hex::encode(&contract.get_private_key());
