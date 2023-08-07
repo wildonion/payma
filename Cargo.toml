@@ -28,7 +28,8 @@ rand = "0.8"
 rand_chacha = "0.3.1"
 rust-argon2 = "1"
 once_cell = "1.17.1"
-
+wasmer = "4.1.1"
+wasmer-wasi = "3.1.1"
 
 
 [[bin]]

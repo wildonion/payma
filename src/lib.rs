@@ -9,7 +9,7 @@
 
 
     - Openssl and ed25519 and tokio rustls also secret chat based on a derived secret key for bot users per device 
-    - cryptography algos(hex editor, bytes, seeds, xor, nor, &, |, include!, ed25519(pub/prv keys and base58 for ssh))
+    - cryptography algos(hex editor, bytes, seeds, xor, nor, &, |, include!, ed25519(pub/prv keys and base58))
     - ed25519: public key is the wallet address in which we can verify the signature of the signed tx | seed will be used to generate keypair and private key is the pen to sign tx and generate signature | both public and private key are of type &[u8; 32] which are a 32 bytes slice of utf8
 
     >>>>>>>> u8 bytes -> &str using str::from_utf8()
@@ -29,11 +29,16 @@
     playing with byte, hex and pointers
     unsafe coding
     writing engines
+    convert this contract into a wasm module to be loadable inside js
 
     zero copy      ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/schemas.rs#L1621C6-L1621C6
     data collision ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/utils.rs#L640
+    
+    https://crates.io/crates/wasmtime
+    https://wasmer.io/
     https://github.com/skerkour/black-hat-rust/tree/main/ch_11
     https://cryptobook.nakov.com/digital-signatures
+    https://github.com/wildonion/cs-concepts
 
     ------
     TASK-1

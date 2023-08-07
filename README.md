@@ -2,4 +2,4 @@
 
 
 
-# Virtual Smart Contract to Build Trust with Coworkers
+# WASM based Virtual Smart Contract to Build Trust with Coworkers
