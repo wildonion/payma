@@ -30,6 +30,7 @@
     unsafe coding
     writing engines
     convert this contract into a wasm module to be loadable inside js
+    steganography using binding techniques like .so and bpf elf
 
     zero copy      ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/schemas.rs#L1621C6-L1621C6
     data collision ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/utils.rs#L640
