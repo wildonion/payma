@@ -2,16 +2,6 @@
 /*
 
 
-    `ed25519` keypair for server checksum and licensing, updating and verification using 
-    its commit (like ssh keys), also time hash based (**`hash(user_id + time + ip + user agent)`**) 
-    locking api with rate limit feature to avoid guarded api call spamming (like sleeping in thread 
-    or using snowflake id based on client secret keys) using `argon2`, `rust-crypto`, `noise` and `ring` tools
-
-
-    - Openssl and ed25519 and tokio rustls also secret chat based on a derived secret key for bot users per device 
-    - cryptography algos(hex editor, bytes, seeds, xor, nor, &, |, include!, ed25519(pub/prv keys and base58))
-    - ed25519: public key is the wallet address in which we can verify the signature of the signed tx | seed will be used to generate keypair and private key is the pen to sign tx and generate signature | both public and private key are of type &[u8; 32] which are a 32 bytes slice of utf8
-
     >>>>>>>> u8 bytes -> &str using str::from_utf8()
     >>>>>>>> &str -> u8 bytes using as_bytes() or as_bytes_mut()
     >>>>>>>> u8 -> u16 using transmute or shift bits operations (shift 2 bytes) or u8 to hex ascii string then to u16 using self::from_hex_string_to_u16() function
@@ -21,20 +11,24 @@
 
 
 
-    Malware in rust using ram concepts (static and const are in segment data and let is on the stack)
+    malware in rust using ram concepts (static and const are in segment data and let is on the stack)
     injectable code like .so and .dll
-
     hardware coding, 
     memory layout and offset, 
     playing with byte, hex and pointers
     unsafe coding
     writing engines
     convert this contract into a wasm module to be loadable inside js
-    steganography using binding techniques like .so and bpf elf
+    lle (hex editor, bytes, seeds, xor, nor, &, |, include!, liefetime, 
+        generic, bytes, hex, base64, raw parts, &mut pointer, unpin 
+        and box, phantomdata) 
+    binding using .so and bpf .elf and https://crates.io/crates/pyo3
+
 
     zero copy      ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/schemas.rs#L1621C6-L1621C6
     data collision ::::: https://github.com/wildonion/uniXerr/blob/a30a9f02b02ec7980e03eb8e31049890930d9238/infra/valhalla/coiniXerr/src/utils.rs#L640
     
+    https://crates.io/crates/pyo3
     https://crates.io/crates/wasmtime
     https://wasmer.io/
     https://github.com/skerkour/black-hat-rust/tree/main/ch_11
@@ -82,247 +76,160 @@
 
 
 mod constants;
-use constants::KEYPAIR;
 use ring::{signature::KeyPair, pkcs8::Document};
 use ring::signature::Ed25519KeyPair;
+use secp256k1::Secp256k1;
+use secp256k1::ecdsa::Signature;
+use serde::{Deserialize, Serialize};
 use std::fmt::Write;
 use ring::{signature as ring_signature, rand as ring_rand};
+use secp256k1::{rand::SeedableRng, rand::rngs::StdRng, PublicKey, SecretKey, Message, hashes::sha256};
+use std::io::BufWriter;
+use tiny_keccak::keccak256;
+use std::str::FromStr;
+use std::{fs::OpenOptions, io::BufReader};
+use web3::{
+    transports,
+    types::{Address, TransactionParameters, H256, U256},
+    Web3,
+};
+use themis::keys as themis_keys;
+use themis::secure_message::{SecureSign, SecureVerify};
+use themis::keygen::gen_ec_key_pair;
+use themis::keys::{EcdsaKeyPair, EcdsaPrivateKey, EcdsaPublicKey};
+use themis::keys::KeyPair as ThemisKeyPair;
 
 
 
-/* 
-    we cannot obtain &'static str from a String because Strings may not live 
-    for the entire life of our program, and that's what &'static lifetime means. 
-    we can only get a slice parameterized by String own lifetime from it, we can 
-    obtain a static str but it involves leaking the memory of the String. this is 
-    not something we should do lightly, by leaking the memory of the String, this 
-    guarantees that the memory will never be freed (thus the leak), therefore, any 
-    references to the inner object can be interpreted as having the 'static lifetime.
-    
-    also here it's ok to return the reference from function since our reference lifetime 
-    is static and is valid for the entire life of the app
-*/
-// TODO - Box and Pin methods
-pub fn string_to_static_str(s: String) -> &'static str { 
-    /* 
-        leaking the memory of the heap data String which allows us to have an 
-        unfreed allocation that can be used to define static str using it since
-        static means we have static lifetime during the whole lifetime of the app
-        and reaching this using String is not possible because heap data types 
-        will be dropped from the heap once their lifetime destroyed in a scope
-        like by moving them into another scope hence they can't be live longer 
-        than static lifetime
-    */
-    Box::leak(s.into_boxed_str()) 
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NewIdRequest{
+    pub gmail: String,
+    pub username: String,
+    pub phone_number: String,
+    pub paypal_id: String,
+    pub account_number: String,
+    pub device_id: String,
+    pub social_id: String,
 }
 
 
-pub fn from_u8_to_hex_string(bytes: &[u8]) -> Result<String, ()> { //// take a reference from u8 and will return a hex String
-    
-    use hex::*;
-    
-    let msg = "get";
-    let msg_bytes = msg.as_bytes();
-    /* 
-                    hex representation of u16 and u8 bits
+// https://thalesdocs.com/gphsm/luna/7/docs/network/Content/sdk/using/ecc_curve_cross-reference.htm
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Wallet {
+    pub secp256k1_secret_key: Option<String>,
+    pub secp256k1_public_key: Option<String>,
+    pub secp256k1_public_address: Option<String>,
+    pub secp256r1_secret_key: Option<String>,
+    pub secp256r1_public_key: Option<String>,
+    pub ed25519_secret_key: Option<String>,
+    pub ed25519_public_key: Option<String>
+}
 
-        `get` payload in hex will be 0x676574 since `g` is 67 in hex
-        which is 103 in decimal which is in form of utf8 bytes means that 
-        every char in form of utf8 bytes must be in range 0 up to 255
-        also every char in hex is 4 bits in binary which means every two
-        chars in hex is 1 byte in utf8 bytes thus 0x676574 is 3 bytes in 
-        form of utf8 bytes also chars can be represented in form of utf16 
-        or 2 bytes long, like `get` is 0xfeff0067feff0065feff0074 in hex which
-        is 12 bytes long or 24 hex chars because `get` has 3 chars which in 
-        utf16 form every char has size of 2 bytes which is 4 chars in hex 
-        thus 3 * 4 = 12 bytes in total for 3 chars in utf16 form.
+impl Wallet{
 
-        representation of char in utf8 will be fallen in range 0 up to 255
-        since 2**8 is 256 and in u16 will be fallen in range 0 up to 65536
-        since 2**16 is 65536, accordingly each char has longer length of hex
-        in u16 like a char in hex has 4 chars in hex and in u8 has 2 chars
-        in hex.
+    pub fn generate_keccak256_from(pubk: String) -> String{
 
-    */
-    let playload_hex_ascii = msg_bytes.iter().map(|b| format!("{:x}", b)).collect::<String>();
-    println!("{playload_hex_ascii:}");
+        let pubk = PublicKey::from_str(&pubk).unwrap();
+        let public_key = pubk.serialize_uncompressed();
+        let hash = keccak256(&public_key[1..]);
+        let addr: Address = Address::from_slice(&hash[12..]);
+        let addr_bytes = addr.as_bytes();
+        let addr_string = format!("0x{}", hex::encode(&addr_bytes));
+        addr_string
 
-
-    ///// -------------- union, enum and struct -------------- /////
-    /*
-        offset is the size in bytes and in order to get
-        the starting offset of a type or struct instance 
-        we can get a raw pointer (since smart pointer in rust 
-        will be coerced to raw pointers at compile time) 
-        to the instance then cast that pointer to usize 
-        which is the size in bytes of the instance pointer itself
-    */
-    
-    /*
-        a pointer contains the memory address of an obejct
-        and it has either 32 or 64 bits (depends on the os arc)
-        size hence we can get it's size by casting it into the 
-        usize type that contains the size of that pointer in bytes
-        inside the stack
-    */
- 
-    struct Object{
-        a: u8, //// we can fill this in a hex form
-        b: u16, //// we can fill this in a hex form
-        c: u32, //// we can fill this in a hex form
     }
 
-    // utf8 hex representation
-    let obj = Object{
-        /*
-            since `a` field is of type u8 thus we have to fill 
-            it with only two chars in hex since every 4 bits 
-            in base 2 is a hex char; the 0xaa is 170 in decimal
-            0xaa is one byte or 8 bits
-        */
-        a: 0xaa, 
-        /*
-            since `b` field is of type u16 thus we have to fill 
-            it with only four chars in hex since every 4 bits 
-            in base 2 is a hex char; the 0xaa is 48059 in decimal
-            0xbbbb is two bytes or 16 bits
-        */
-        b: 0xbbbb, 
-        /*
-            since `c` field is of type u32 thus we have to fill 
-            it with only eight chars in hex since every 4 bits 
-            in base 2 is a hex char; the 0xcccccccc is 3435973836 in decimal
-            0xcccccccc is two bytes or 32 bits
-        */
-        c: 0xcccccccc
-    };
+    pub fn new_ed25519() -> Self{
 
-    /*
-        usize is an unsigned size which is big enough
-        to store any pointer and in 32 bits arch is 4 bytes
-        and in 64 bits is 8 bytes also each usize contains 
-        the size in bytes in either 32 or 64 bits format
-    //
-        base is the usize pointer of the object itself 
-        which contains the size of the starting offset 
-        in bytes in memory, we've just cast the pointer 
-        to the location of the obj instance into the usize
-        to get the size of its pointer in bytes which is the 
-        starting offset of all its fields
-    */
-    let base = &obj as *const _ as usize; //// we're considering the pointer of the obj instance as the starting point of the offset by converting its pointer into usize 
-    let a_off = &obj.a as *const _ as usize - base; //// this is the `a` field offset by subtracting its usize pointer (cast its *const pointer to usize) from the base offset
-    let b_off = &obj.b as *const _ as usize - base; //// this is the `b` field offset by subtracting its usize pointer (cast its *const pointer to usize) from the base offset
-    let c_off = &obj.c as *const _ as usize - base; //// this is the `c` field offset by subtracting its usize pointer (cast its *const pointer to usize) from the base offset
-    println!("base: {}", base); 
-    println!("a: {}", a_off as usize - base);
-    println!("b: {}", b_off as usize - base);
-    println!("c: {}", c_off as usize - base);
-
-
-    /*
-        let hex_ascii_string = "hello world".as_bytes().iter().map(|x| format!("{:02x}", x)).collect::<String>()
-        >> let mut s = String::new();
-        >> use std::fmt::Write as FmtWrite; // renaming import to avoid collision
-        >> for b in "hello world".as_bytes() { write!(s, "{:02x}", b); }
-        ()
-        >> s
-        "68656c6c6f20776f726c64"
-        >> 
-    */
-    let hex_arr = &[0x23u8, 0xF2u8];
-    let mut buffer = String::with_capacity(bytes.len() * 2); //// length of the String must be double of the size of the u8 cause we want to write u16 or hex into this buffer
-    for &b in bytes {
-        write!(&mut buffer, "{:02x}", b).expect("⚠️ writing to String buffer error for hex ascii"); //// writing formatted data into the buffer which is the String - panic on any error
-    }
-    Ok(buffer)
-}
-
-pub fn from_hex_string_to_u8(hex_string: &str) -> Result<Vec<u8>, ()>{
-    let mut hex_bytes = hex_string.as_bytes().iter().filter_map(|b| {
-        match b {
-            b'0'..=b'9' => Some(b - b'0'),
-            b'a'..=b'f' => Some(b - b'a' + 10),
-            b'A'..=b'F' => Some(b - b'A' + 10),
-            _ => None,
-        }
-    }).fuse();
-
-    let mut bytes = Vec::new();
-    while let (Some(h), Some(l)) = (hex_bytes.next(), hex_bytes.next()) {
-        bytes.push(h << 4 | l)
-    }
-    Ok(bytes)
-}
-
-pub fn from_hex_string_to_u16(s: &str) -> Result<Vec<u16>, std::num::ParseIntError> {
-    (0..s.len())
-        .step_by(2)
-        .map(|i| u16::from_str_radix(&s[i..i + 2], 16))
-        .collect()
-}
-
-
-
-/* ED25519 implementation using ring */
-pub struct Contract{
-    keypair: &'static Ed25519KeyPair,
-    prvkey: Vec<u8>,
-    pub iat: i64,
-    pub owner: &'static str
-}
-
-impl Contract{
-    pub fn new(owner: &str) -> Self{
-        
-        let static_owner = string_to_static_str(owner.to_string());
-        let keypair = KEYPAIR.0.as_ref();
-        let Ok(keys) = keypair else{
-            panic!("can't generate keypair due to: {:?}", keypair.unwrap_err());
-        };
+        let rng = ring_rand::SystemRandom::new();
+        let pkcs8_bytes = ring_signature::Ed25519KeyPair::generate_pkcs8(&rng).unwrap();
+        let keys = ring_signature::Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref()).unwrap();
 
         /* ED25519 keypair */
         let pubkey = keys.public_key().as_ref();
-        let prvkey = KEYPAIR.1.as_ref();
+        let prvkey = pkcs8_bytes.as_ref();
 
-        Self { keypair: keys, prvkey: prvkey.to_vec(), iat: chrono::Local::now().timestamp_nanos(), owner: static_owner }
+        /* converting bytes to hex string */
+        let pubkey_string = hex::encode(&pubkey);
+        let prvkey_string  = hex::encode(&prvkey);
+
+        Wallet{
+            secp256k1_secret_key: None,
+            secp256k1_public_key: None,
+            secp256k1_public_address: None,
+            secp256r1_public_key: None,
+            secp256r1_secret_key: None,
+            ed25519_public_key: Some(pubkey_string),
+            ed25519_secret_key: Some(prvkey_string)
+        }
+
+    }
+
+    pub fn new_secp256k1(input_id: NewIdRequest) -> Self{
+
+        /* generating seed from the input id to create the rng for secp256k1 keypair */
+        let input_id_string = serde_json::to_string(&input_id).unwrap();
+        let input_id_bytes = input_id_string.as_bytes();
+        let hashed_input_id = ring::digest::digest(&ring::digest::SHA256, input_id_bytes);
+        let hashed_input_id_bytes = hashed_input_id.as_ref();
         
+        /* to create the rng we need a 32 bytes seed and we're sure that the hash is 32 bytes cause it's sha256 bits */
+        let seed = <[u8; 32]>::try_from(&hashed_input_id_bytes[0..32]).unwrap();
+        let rng = &mut StdRng::from_seed(seed);
+        
+        /* since the secp is going to be built from an specific seed thus the generated keypair will be the same everytime we request a new one */
+        let secp = secp256k1::Secp256k1::new();
+        let (prvk, pubk) = secp.generate_keypair(rng);
+        let prv_str = prvk.display_secret().to_string();
+
+        Wallet{
+            secp256k1_secret_key: Some(prv_str),
+            secp256k1_public_key: Some(pubk.to_string()),
+            secp256k1_public_address: Some(Self::generate_keccak256_from(pubk.to_string())),
+            secp256r1_public_key: None,
+            secp256r1_secret_key: None,
+            ed25519_public_key: None,
+            ed25519_secret_key: None
+        }
     }
 
-    pub fn get_public_key(&self) -> Vec<u8>{
+    pub fn new_secp256r1() -> Self{
 
+        /* ECDSA keypairs */
+        let ec_key_pair = gen_ec_key_pair(); // generates a pair of Elliptic Curve (ECDSA) keys
+        let (private, public) = ec_key_pair.clone().split();
+        let hex_pub = Some(hex::encode(public.as_ref()));
+        let hex_prv = Some(hex::encode(private.as_ref()));
 
-        self.keypair.public_key().as_ref().to_vec()
-
-    }
-
-    pub fn get_private_key(&self) -> Vec<u8>{
-
-        /* 
-            cloning the self to prevent from moving since returning 
-            heap data from method will move the self 
-        */
-        self.prvkey.clone()
-
-    }
-
-    pub fn sign(&self, data: &str) -> Vec<u8>{
-
-
-        let signature = self.keypair.sign(data.as_bytes());
-        signature.as_ref().to_vec()
-
+        Wallet { 
+            secp256k1_secret_key: None, 
+            secp256k1_public_key: None, 
+            secp256k1_public_address: None, 
+            secp256r1_secret_key: hex_prv, 
+            secp256r1_public_key: hex_pub,
+            ed25519_public_key: None,
+            ed25519_secret_key: None,
+        }
 
     }
 
-    pub fn is_valid_transaction(&self, sig: Vec<u8>, data: &str) -> bool{
-        self.verify_signature(sig, data)
+    pub fn ed25519_sign(data: String, prvkey: String) -> Option<String>{
+
+        let prvkey_bytes = hex::decode(prvkey).unwrap();
+        let ed25519 = Self::retrieve_ed25519_keypair(&prvkey_bytes);
+        let signature = ed25519.sign(data.as_bytes());
+        let sig = signature.as_ref().to_vec();
+        Some(hex::encode(&sig))
+
     }
 
-    fn verify_signature(&self, sig: Vec<u8>, data: &str) -> bool{
+    pub fn verify_ed25519_signature(sig: String, data: String, pubkey: String) -> bool{
 
+        let sig_bytes = hex::decode(&sig).unwrap();
         let message = data.as_bytes();
-        let pubkey = self.keypair.public_key().as_ref();
+        let pubkey = hex::encode(pubkey);
         let ring_pubkey = ring_signature::UnparsedPublicKey::new(&ring_signature::ED25519, pubkey);
 
         /* 
@@ -330,14 +237,14 @@ impl Contract{
             since a pointer to the underlying Vec<u8> means taking a slice of 
             vector with a valid lifetime
         */
-        match ring_pubkey.verify(message, &sig){ 
+        match ring_pubkey.verify(message, &sig_bytes){ 
             Ok(_) => true,
             Err(_) => false
         }
 
     }
 
-    pub fn generate_keys_from(&self, prv_key: &[u8]) -> Ed25519KeyPair{
+    pub fn retrieve_ed25519_keypair(prv_key: &[u8]) -> Ed25519KeyPair{
 
         /* constructing keypair from the private key */
         let private_key = hex::decode(&prv_key).unwrap();
@@ -346,5 +253,107 @@ impl Contract{
 
     }
 
+    pub fn verify_secp256k1_signature(data: String, sig: Signature, pk: PublicKey) -> Result<(), secp256k1::Error>{
+
+        let data_bytes = data.as_bytes();
+        let hashed_data = Message::from_hashed_data::<sha256::Hash>(data_bytes);
+            
+        /* message is an sha256 bits hashed data */
+        let secp = Secp256k1::verification_only();
+        secp.verify_ecdsa(&hashed_data, &sig, &pk)
+
+    }
+
+    pub fn retrieve_secp256k1_keypair(secret_key: &[u8], public_key: &[u8]) -> (PublicKey, SecretKey){
+
+        let secp = Secp256k1::new();
+        let secret_key = SecretKey::from_slice(secret_key).unwrap();
+        let public_key = PublicKey::from_secret_key(&secp, &secret_key);
+
+        (public_key, secret_key)
+    }
+
+    pub fn secp256k1_sign(signer: String, data: String) -> Signature{
+
+        let secret_key = SecretKey::from_str(&signer).unwrap();
+        let data_bytes = data.as_bytes();
+        let hashed_data = Message::from_hashed_data::<sha256::Hash>(data_bytes);
+        
+        /* message is an sha256 bits hashed data */
+        let secp = Secp256k1::new();
+        secp.sign_ecdsa(&hashed_data, &secret_key)
+
+    }
+
+    pub fn retrieve_secp256r1_keypair(hex_pubkey: &str, hex_prvkey: &str) -> themis::keys::KeyPair{
+
+        /* building ECDSA keypair from pubkey and prvkey slices */
+        let pubkey_bytes = hex::decode(hex_pubkey).unwrap();
+        let prvkey_bytes = hex::decode(hex_prvkey).unwrap();
+        let ec_pubkey = EcdsaPublicKey::try_from_slice(&pubkey_bytes).unwrap();
+        let ec_prvkey = EcdsaPrivateKey::try_from_slice(&prvkey_bytes).unwrap();
+        let generated_ec_keypair = ThemisKeyPair::try_join(ec_prvkey, ec_pubkey).unwrap();
+        generated_ec_keypair
+
+    }
+
+    pub fn secp256r1_sign(signer: String, data: String) -> Option<String>{
+
+        /* building the signer from the private key */
+        let prvkey_bytes = hex::decode(signer).unwrap();
+        let ec_prvkey = EcdsaPrivateKey::try_from_slice(&prvkey_bytes).unwrap();
+        let ec_signer = SecureSign::new(ec_prvkey.clone());
+        
+        /* json stringifying the json_input value */
+        let inputs_to_sign = serde_json::to_string(&data).unwrap(); 
+    
+        /* generating signature from the input data */
+        let ec_sig = ec_signer.sign(inputs_to_sign.as_bytes()).unwrap();
+        
+        /* converting the signature byte into hex string */
+        Some(hex::encode(&ec_sig))
+
+    }
+
+    pub fn verify_secp256r1_signature(signature: &[u8], pubkey: &[u8]) -> Result<Vec<u8>, themis::Error>{
+
+        /* building the public key from public key bytes */
+        let Ok(ec_pubkey) = EcdsaPublicKey::try_from_slice(pubkey) else{
+            let err = EcdsaPublicKey::try_from_slice(pubkey).unwrap_err();
+            return Err(err); /* can't build pubkey from the passed in slice */
+        };
+
+        /* building the verifier from the public key */
+        let ec_verifier = SecureVerify::new(ec_pubkey.clone());
+
+        /* verifying the signature byte which returns the data itself in form of utf8 bytes */
+        let encoded_data = ec_verifier.verify(signature);
+
+        encoded_data
+
+    }
+    
+}
+
+/* ED25519 implementation using ring */
+pub struct Contract{
+    pub wallet: Wallet,
+    pub iat: i64,
+    pub owner: &'static str
+}
+
+impl Contract{
+    pub fn new(owner: &str) -> Self{
+        
+        let static_owner = constants::string_to_static_str(owner.to_string());
+        let wallet = Wallet::new_ed25519();
+
+        Self { 
+            wallet,
+            iat: chrono::Local::now().timestamp_nanos(), 
+            owner: static_owner 
+        }
+        
+    }
 
 }
