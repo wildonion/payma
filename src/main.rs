@@ -10,12 +10,14 @@ use ring::{signature as ring_signature, rand as ring_rand};
 use ring::signature::Ed25519KeyPair;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use crypter::{self, Wallet};
+use crypter::*;
 use web3::contract;
 
 
 mod constants;
 mod lle;
+mod wallet;
+use wallet::{Wallet, Contract};
 
 
 /*
@@ -45,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     };
     let stringify_data = serde_json::to_string_pretty(&data).unwrap();
 
-    let contract = crypter::Contract::new("wildonion");
+    let contract = Contract::new("wildonion");
     
     let signature_hex = Wallet::ed25519_sign(stringify_data.clone(), contract.wallet.ed25519_secret_key.unwrap());
     
