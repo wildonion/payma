@@ -2,8 +2,9 @@
 
 # Onion
 
-I'll Cry 4 U :)
+My four years of searching, learning and coding in security, 
 
+I'll Cry 4 U :)
 
 ## How to Cry
 
