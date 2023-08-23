@@ -27,12 +27,21 @@ use themis::keys::{EcdsaKeyPair, EcdsaPrivateKey, EcdsaPublicKey};
 use themis::keys::KeyPair as ThemisKeyPair;
 
 
+/* 
+     ---------------------------------------------------------------- 
+    |  Asymmetric Crypto Wallet Implementations using ECC Algorithm
+    |----------------------------------------------------------------
+    | ed25519
+    | secp256k1
+    | secp256r1
+    |
 
+*/
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct NewIdRequest{
-    pub gmail: String,
+pub struct NewSeedRequest{
+    pub mail: String,
     pub username: String,
     pub phone_number: String,
     pub paypal_id: String,
@@ -94,7 +103,7 @@ impl Wallet{
 
     }
 
-    pub fn new_secp256k1(input_id: NewIdRequest) -> Self{
+    pub fn new_secp256k1(input_id: NewSeedRequest) -> Self{
 
         /* generating seed from the input id to create the rng for secp256k1 keypair */
         let input_id_string = serde_json::to_string(&input_id).unwrap();
