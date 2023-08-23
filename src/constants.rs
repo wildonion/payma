@@ -7,6 +7,17 @@ use once_cell::sync::Lazy;
 
 
 /* 
+
+    - u8 bytes -> &str using str::from_utf8()
+    - &str -> u8 bytes using as_bytes() or as_bytes_mut()
+    - u8 -> u16 using transmute or shift bits operations (shift 2 bytes) or u8 to hex ascii string then to u16 using self::from_hex_string_to_u16() function
+    - u8 -> hex ascii string using self::from_u8_to_hex_string() function
+    - hex ascii string to u8 or u16 using from_str_radix()
+    - u8 -> hex ascii vector using :x? in println! macro or dividing operations : u8 bytes % 16 
+
+*/
+
+/* 
     we cannot obtain &'static str from a String because Strings may not live 
     for the entire life of our program, and that's what &'static lifetime means. 
     we can only get a slice parameterized by String own lifetime from it, we can 

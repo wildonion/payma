@@ -284,3 +284,39 @@ impl Contract{
     }
 
 }
+
+#[cfg(test)]
+pub mod tests{
+
+    use super::*;
+
+    pub fn ed25519_test() -> Result<(), ()>{
+        
+        #[derive(Serialize, Deserialize)]
+        struct Data{
+            pub repo: String,
+            pub commits: u16,
+            pub budget: u16 
+        }
+        let data = Data{
+            repo: "github repo containing the code".to_string(), 
+            commits: 0u16,
+            budget: 50
+        };
+        let stringify_data = serde_json::to_string_pretty(&data).unwrap();
+
+        let contract = Contract::new("wildonion");
+        
+        let signature_hex = Wallet::ed25519_sign(stringify_data.clone(), contract.wallet.ed25519_secret_key.unwrap());
+        
+        let is_verified = Wallet::verify_ed25519_signature(signature_hex.unwrap(), stringify_data, contract.wallet.ed25519_public_key.unwrap());
+
+        match is_verified{
+            true => Ok(()),
+            false => Err(())
+        }
+
+    }
+
+
+}
