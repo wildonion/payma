@@ -10,6 +10,7 @@
     https://github.com/skerkour/black-hat-rust/tree/main/ch_11
     https://cryptobook.nakov.com/digital-signatures
     https://github.com/wildonion/cs-concepts
+    https://github.com/mozilla/cbindgen -> generate c bindings and .so from rust code
 
 
     malware in rust using ram concepts (static and const are in segment data and let is on the stack)
@@ -23,7 +24,7 @@
     lle (hex editor, bytes, seeds, xor, nor, &, |, include!, liefetime, 
         generic, bytes, hex, base64, raw parts, &mut pointer, unpin 
         and box, phantomdata) 
-    binding using .so and bpf .elf and https://crates.io/crates/pyo3
+    binding using .so and https://crates.io/crates/pyo3
     encrypt the whole os using ring based on PGP keypairs
         we can decrypt it with private key only and the victim
         must pay for the private key

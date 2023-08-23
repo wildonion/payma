@@ -2,7 +2,7 @@
 
 
 
-Payma is a WASM based Virtual Smart Contract Supports Crypto Wallet on top of ZKP to Build Trust with Coworkers
+Payma is a WASM based virtual smart contract supports web3 crypto wallet on top of **ZKP** algorithm to build trust with coworkers. It can also be used and injected as a dynamic library or shared object (`.so`) file in other codes and as a `.wasm` file into `js` projects.
 
 ## Process 
 
