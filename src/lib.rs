@@ -14,7 +14,7 @@
 
 
     malware in rust using ram concepts (static and const are in segment data and let is on the stack)
-    injectable code like .so and .dll
+    injectable code like .so and .dll also use https://ghidra-sre.org/
     hardware coding, 
     memory layout and offset, 
     playing with byte, hex and pointers
@@ -24,7 +24,6 @@
     lle (hex editor, bytes, seeds, xor, nor, &, |, include!, liefetime, 
         generic, bytes, hex, base64, raw parts, &mut pointer, unpin 
         and box, phantomdata) 
-    binding using .so and https://crates.io/crates/pyo3
     encrypt the whole os using ring based on PGP keypairs
         we can decrypt it with private key only and the victim
         must pay for the private key
@@ -37,6 +36,8 @@
 pub mod zkp{
 
     pub struct ZkpError;
+    pub struct Verifier;
+    pub struct Prover;
 
     pub async fn auth(wallet: &mut Wallet) -> Result<(), ZkpError>{
 
