@@ -1,22 +1,36 @@
 
 
-
-
-
-
-
+use sha2::{Digest, Sha256};
 use std::fmt::Write;
 use ring::{signature as ring_signature, rand as ring_rand};
 use ring::signature::Ed25519KeyPair;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use crypter::*;
-use web3::contract;
+use ring::{signature::KeyPair, pkcs8::Document};
+use secp256k1::Secp256k1;
+use secp256k1::ecdsa::Signature;
+use secp256k1::{rand::SeedableRng, rand::rngs::StdRng, PublicKey, SecretKey, Message, hashes::sha256};
+use std::io::BufWriter;
+use tiny_keccak::keccak256;
+use std::str::FromStr;
+use std::{fs::OpenOptions, io::BufReader};
+use web3::{
+    transports,
+    types::{Address, TransactionParameters, H256, U256},
+    Web3,
+};
+use themis::keys as themis_keys;
+use themis::secure_message::{SecureSign, SecureVerify};
+use themis::keygen::gen_ec_key_pair;
+use themis::keys::{EcdsaKeyPair, EcdsaPrivateKey, EcdsaPublicKey};
+use themis::keys::KeyPair as ThemisKeyPair;
+use secp256k1::hashes::Hash;
+use rand::random;
 
-
-mod constants;
-mod lle;
-mod wallet;
+use crypter;
+pub mod constants;
+pub mod cry;
+pub mod wallet;
 use wallet::{Wallet, Contract};
 
 
@@ -33,37 +47,9 @@ use wallet::{Wallet, Contract};
 */
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
-    
-    #[derive(Serialize, Deserialize)]
-    struct Data{
-        pub repo: String,
-        pub commits: u16,
-        pub budget: u16 
-    }
-    let data = Data{
-        repo: "github repo containing the code".to_string(), 
-        commits: 0u16,
-        budget: 50
-    };
-    let stringify_data = serde_json::to_string_pretty(&data).unwrap();
 
-    let contract = Contract::new("wildonion");
-    
-    let signature_hex = Wallet::ed25519_sign(stringify_data.clone(), contract.wallet.ed25519_secret_key.unwrap());
-    
-    let is_verified = Wallet::verify_ed25519_signature(signature_hex.unwrap(), stringify_data, contract.wallet.ed25519_public_key.unwrap());
 
-    if is_verified{
-
-        // start the project 
-        // ...
-
-    } else{
-
-        // stop working
-        // ...
-    }
-
+    cry::poison::decryptaes256::thecry();
 
     Ok(())
 
