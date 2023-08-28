@@ -42,7 +42,7 @@ Payma is a WASM based virtual smart contract supports web3 crypto wallet on top 
 ### CBC-Decryption
 
 <p align="center">
-    <img src="https://github.com/wildonion/payma/blob/main/src/cry/CBC_decryption.svg">
+    <img src="https://github.com/wildonion/payma/blob/main/src/cry/CBC_decryption.png">
 </p>
 
 ## PKCS#7 Padding
