@@ -4,9 +4,9 @@ use crate::*;
 
 
 /* 
-     ---------------------------------------------------------------- 
-    |  Asymmetric Crypto Wallet Implementations using ECC Algorithms
-    |----------------------------------------------------------------
+     ---------------------------------------------------------------------
+    |  RSA (Asymmetric) Crypto Wallet Implementations using ECC Algorithms
+    |---------------------------------------------------------------------
     | ed25519   -> EdDSA 
     | secp256k1 -> EC
     | secp256r1 -> ECDSA

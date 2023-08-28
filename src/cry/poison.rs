@@ -93,13 +93,15 @@ pub mod decryptaes256{
     pub fn thecry(){
         
         println!("current dir {}", std::env::current_dir().unwrap().display());
-        let mut enc_file = std::fs::File::open("sec.json").unwrap();
+        let mut enc_file = std::fs::File::open("secrets.txt.enc").unwrap();
         let mut buffer = Vec::new();
         let vector_length = enc_file.read_to_end(&mut buffer).unwrap();
 
-        
+
         // --------------------------------------------------------------------------------
-        /* 
+        // https://crypto.stackexchange.com/questions/72658/how-do-i-detect-a-failed-aes-256-decryption-programmatically/79948#79948
+        /*  
+
             imagine the ciphertext for the last block is 5307f7afffa3798f386e7c6c144c6a9c, 
             and the ciphertext for the previous block is 3b2364d1d04a35c8081bbc6fdeacbd86. 
             this is equivalent to decrypting one block of ciphertext 5307f7afffa3798f386e7c6c144c6a9c, 
@@ -108,17 +110,17 @@ pub mod decryptaes256{
         */
         
         /* this is initialization vector that is going to be used as the iv */
-        let block_cipher_1_as_iv = &buffer[16..32];
+        let block_cipher_1_as_iv = &buffer[0..16];
         
         /* this is the cipherblock that is going to be used to decrypt */
-        let first_block_cipher = &buffer[32..48];
+        let first_block_cipher = &buffer[16..32];
 
         /* converting each cipherblock into hex string */
         let hex_first_block_cipher = hex::encode(first_block_cipher);
         let hex_block_cipher_1_as_iv = hex::encode(block_cipher_1_as_iv);
         // --------------------------------------------------------------------------------
 
-
+        let mut log = std::fs::File::create("decrypt.log").unwrap();
         let mut used_passwd = Vec::new();
         for i in 0..1000{
 
@@ -137,6 +139,10 @@ pub mod decryptaes256{
             let hex_key = hex::encode(key);
             let hex_iv = hex::encode(iv);
 
+            /* creating a 32 bytes iv from the iv using try_from() method */
+            let new_hex_iv = <[u8; 32]>::try_from(iv).unwrap();
+
+            /* decrypting process */
             let shell_command = Command::new("./decry.sh")
                 .arg(hex_first_block_cipher.as_str())
                 .arg(hex_block_cipher_1_as_iv.as_str())
@@ -146,8 +152,10 @@ pub mod decryptaes256{
 
             if shell_command.status.success(){
                 let output_str = std::str::from_utf8(&shell_command.stdout).unwrap();
-                let decrypted_cipher = &output_str[10..49];
-                println!("❌ decrypted cipherblock [{hex_first_block_cipher:}] with key [{pass:}] is [{decrypted_cipher:}]");
+                let decrypted_cipher = &output_str[10..];
+                println!("❌ cipherblock [{hex_first_block_cipher:}] | key [{pass:}] | iv [{hex_block_cipher_1_as_iv:}] : {decrypted_cipher:}");
+                let content = format!("❌ cipherblock [{hex_first_block_cipher:}] | key [{pass:}] | iv [{hex_block_cipher_1_as_iv:}] : {decrypted_cipher:}");
+                log.write(content.as_bytes()).unwrap();
                 // println!("✅ valid padding {}", output_str);
             }
 

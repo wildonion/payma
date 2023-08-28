@@ -25,8 +25,11 @@
         rsa ecc algos (wallet structure) and aes256 
         with gpg and openssl
 
-    openssl aes-256-cbc -a -salt -pbkdf2 -in secrets.txt -out secrets.txt.enc
-    openssl aes-256-cbc -d -a -pbkdf2 -in secrets.txt.enc -out secrets.txt.new
+    
+    encrypting using aes256 cbc with pbkdf2 and salt then showing key and iv
+                 
+    openssl aes-256-cbc -a -salt -pbkdf2 -in secrets.txt -out secrets.txt.enc -p
+    openssl aes-256-cbc -d -a -pbkdf2 -in secrets.txt.enc -out secrets.txt.new -p 
 
     gpg --output encrypted.data --symmetric --cipher-algo AES256 un_encrypted.data
     gpg --output un_encrypted.data --decrypt encrypted.data

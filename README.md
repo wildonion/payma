@@ -55,10 +55,13 @@ Payma is a WASM based virtual smart contract supports web3 crypto wallet on top 
 For the padding to be valid, the last `N` bytes of the decrypted plaintext must be a sequence from 1 to `N`, each of value `N`. For example, the last two bytes could be `0x02, 0x02` or the last three bytes could be `0x03, 0x03, 0x03`.
 
 ## How to Determine a Correct Key
-To verify whether you've used the correct key for decryption, you decrypt the last block of the ciphertext using that key and the ciphertext from the second-to-last block as the IV (Initialization Vector). If the decryption is successful and the plaintext contains valid **PKCS#7** padding, then the key is most likely correct.
+To verify whether you've used the correct key for decryption, you decrypt the last block of the ciphertext using that key and the ciphertext from the second-to-last block as the `IV` (Initialization Vector). If the decryption is successful and the plaintext contains valid **PKCS#7** padding, then the key is most likely correct.
 
-## Decryption Process ([Padding Oracle Attack](https://robertheaton.com/2013/07/29/padding-oracle-attack/))
-In our `exam.json` file example, we would select two cipher blocks inside the json file using a hex editor, like `5307f7afffa3798f386e7c6c144c6a9c` and its next block like `3b2364d1d04a35c8081bbc6fdeacbd86` to decrypt the second one using the second-to-last block as the IV which `5307f7afffa3798f386e7c6c144c6a9c`. If the resulting plaintext block has a valid **PKCS#7** padding, then the key is correct. This check works because if the wrong key or IV is used for decryption, the resulting plaintext is highly unlikely to have valid **PKCS#7** padding.
+## Decryption Process 
+
+> more on [Padding Oracle Attack](https://robertheaton.com/2013/07/29/padding-oracle-attack/)
+
+In our `exam.json` file example, we would select two cipher blocks inside the json file using a hex editor, like `5307f7afffa3798f386e7c6c144c6a9c` and its next block like `3b2364d1d04a35c8081bbc6fdeacbd86` to decrypt the second one using the second-to-last block as the `IV` which `5307f7afffa3798f386e7c6c144c6a9c`. If the resulting plaintext block has a valid **PKCS#7** padding, then the key is correct. This check works because if the wrong key or IV is used for decryption, the resulting plaintext is highly unlikely to have valid **PKCS#7** padding.
 
 ## Conclusion
 
