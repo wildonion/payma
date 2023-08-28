@@ -16,9 +16,8 @@
 
 
     decompiling using ghidra
-    malware in rust using ram concepts like memory layout and offset (static and const are in segment data and let is on the stack)
+    hardware coding with ram concepts like memory layout and offset (static and const are in segment data and let is on the stack)
     convert this contract into a wasm module to be loadable inside js
-    hardware coding,
     lle (hex editor, bytes, seeds, xor, nor, &, |, include!, liefetime, 
         generic, bytes, hex, base64, raw parts, &mut pointer, unpin, pin
         and box methods, phantomdata) 

@@ -92,22 +92,43 @@ pub mod decryptaes256{
 
     pub fn thecry(){
         
-        let mut enc_file = std::fs::File::open("src/cry/sec.json").unwrap();
+        println!("current dir {}", std::env::current_dir().unwrap().display());
+        let mut enc_file = std::fs::File::open("sec.json").unwrap();
         let mut buffer = Vec::new();
-        let length = enc_file.read_to_end(&mut buffer).unwrap();
+        let vector_length = enc_file.read_to_end(&mut buffer).unwrap();
 
-        let first_block_cipher = &buffer[..16];
+        
+        // --------------------------------------------------------------------------------
+        /* 
+            imagine the ciphertext for the last block is 5307f7afffa3798f386e7c6c144c6a9c, 
+            and the ciphertext for the previous block is 3b2364d1d04a35c8081bbc6fdeacbd86. 
+            this is equivalent to decrypting one block of ciphertext 5307f7afffa3798f386e7c6c144c6a9c, 
+            using an iv of 3b2364d1d04a35c8081bbc6fdeacbd86, also aes requires the length 
+            of each cipherblock to be 16 bytes
+        */
+        
+        /* this is initialization vector that is going to be used as the iv */
         let block_cipher_1_as_iv = &buffer[16..32];
+        
+        /* this is the cipherblock that is going to be used to decrypt */
+        let first_block_cipher = &buffer[32..48];
 
-        /* salt maybe ??? */
-
+        /* converting each cipherblock into hex string */
         let hex_first_block_cipher = hex::encode(first_block_cipher);
         let hex_block_cipher_1_as_iv = hex::encode(block_cipher_1_as_iv);
+        // --------------------------------------------------------------------------------
 
+
+        let mut used_passwd = Vec::new();
         for i in 0..1000{
 
             let pass = gen_pswd();
             let secret = gen_kdf(pass.as_str());
+            
+            if used_passwd.contains(&pass){
+                continue;
+            }
+            used_passwd.push(pass.clone());
 
             /* we can use the first 32 bytes as the key and the rest as the iv */
             let key = &secret.as_slice()[..32];
@@ -117,7 +138,6 @@ pub mod decryptaes256{
             let hex_iv = hex::encode(iv);
 
             let shell_command = Command::new("./decry.sh")
-                .current_dir("src/cry")
                 .arg(hex_first_block_cipher.as_str())
                 .arg(hex_block_cipher_1_as_iv.as_str())
                 .arg(hex_key)
@@ -126,7 +146,8 @@ pub mod decryptaes256{
 
             if shell_command.status.success(){
                 let output_str = std::str::from_utf8(&shell_command.stdout).unwrap();
-                println!("❌ invalid padding {}", output_str);
+                let decrypted_cipher = &output_str[10..49];
+                println!("❌ decrypted cipherblock [{hex_first_block_cipher:}] with key [{pass:}] is [{decrypted_cipher:}]");
                 // println!("✅ valid padding {}", output_str);
             }
 
