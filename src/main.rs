@@ -27,7 +27,8 @@ use themis::keys::KeyPair as ThemisKeyPair;
 use secp256k1::hashes::Hash;
 use rand::random;
 
-use crypter;
+
+pub mod misc;
 pub mod constants;
 pub mod wallet;
 use wallet::{Wallet, Contract};
@@ -47,26 +48,31 @@ use wallet::{Wallet, Contract};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
-
     let buffer_size = std::env::var("BUFFER_SIZE").unwrap_or("1024".to_string()).parse::<usize>().unwrap();
-    let host = std::env::var("HOST").unwrap();
-    let port = std::env::var("PORT").unwrap().parse::<u16>().unwrap();
-    let (deposit_tx_hash_sender, deposit_tx_hash_receiver) = tokio::sync::mpsc::channel::<String>(buffer_size);
+    let repo = "".to_string();
+    let cmd = "deposit";
+
     let contract = Contract::init(
-        "payma", 
-        "".to_string(), 
+        "0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4", 
+        repo, 
         10, 
         50
     );
+
+    let tx_hash = if cmd == "deposit"{
+
+        misc::deposit(contract.clone())
+            .await
+            .unwrap()
+
+    } else{
+
+        misc::withdraw(contract.clone())
+            .await
+            .unwrap()
+
+    };
     
-    tokio::spawn(async move{
-
-
-        /* call deposit api */
-
-    });
-
-
 
     Ok(())     
 

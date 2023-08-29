@@ -35,15 +35,24 @@ while let Ok(confirmed_commits) = get_employee_confirmation().await{
 ```bash
 # Create contract 
 sudo npx thirdweb create contract && sudo chmod -R 777 .
-# Compiles your contracts and detects thirdweb extensions implemented on them.
+# Compiles contract and detects thirdweb extensions implemented on them.
 yarn build
-# Deploys your contracts with the thirdweb deploy flow.
+# Deploys contract with the thirdweb deploy flow.
 yarn deploy
-# Publishes your contracts with the thirdweb publish flow.
+# Publishes contract with the thirdweb publish flow.
 yarn publish
+# Release contract publicly
+yarn release
 ```
 
 ## 🌋 Deploy Thirdweb fastapi Server
+
+```bash
+sudo docker build -t thirdweb -f $(pwd)/thirdweb/Dockerfile . --no-cache
+sudo docker run -d --restart unless-stopped --network gem --name thirdweb -p 7651:7650 thirdweb
+```
+
+## 🌋 Deploy Payma fastapi Server
 
 ```bash
 sudo docker build -t thirdweb -f $(pwd)/infra/docker/thirdweb/Dockerfile . --no-cache

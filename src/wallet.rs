@@ -133,6 +133,7 @@ impl Wallet{
     
 }
 
+#[derive(Clone)]
 pub struct Contract{
     pub wallet: Wallet,
     pub iat: i64,
@@ -196,7 +197,7 @@ impl Contract{
 
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Data{
     pub repo: String,
     pub commits: u16,
