@@ -19,7 +19,7 @@ pub struct NewSeedRequest{
 
 
 // https://thalesdocs.com/gphsm/luna/7/docs/network/Content/sdk/using/ecc_curve_cross-reference.htm
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Wallet {
     pub secp256k1_secret_key: Option<String>,
     pub secp256k1_public_key: Option<String>,
@@ -136,12 +136,13 @@ impl Wallet{
 pub struct Contract{
     pub wallet: Wallet,
     pub iat: i64,
-    pub owner: &'static str
+    pub owner: &'static str,
+    pub data: Option<Data>,
 }
 
 impl Contract{
 
-    pub fn new_with_secp256k1(owner: &str) -> Self{
+    fn new_with_secp256k1(owner: &str) -> Self{
         
         let static_owner = constants::string_to_static_str(owner.to_string());
         let wallet = Wallet::new_secp256k1(NewSeedRequest::default());
@@ -149,9 +150,58 @@ impl Contract{
         Self { 
             wallet,
             iat: chrono::Local::now().timestamp_nanos(), 
-            owner: static_owner 
+            owner: static_owner,
+            data: None
         }
         
     }
 
+    pub fn init(owner: &str, repo: String, commits: u16, budget: u16) -> Self{
+
+        let mut data = Data{
+            repo, 
+            commits,
+            budget,
+            signature: "".to_string(),
+            signed_at: 0,
+        };
+        let stringify_data = serde_json::to_string_pretty(&data).unwrap();
+    
+        /* wallet operations */
+    
+        let contract = Contract::new_with_secp256k1("wildonion");
+    
+        let signature = Wallet::secp256k1_sign(contract.wallet.secp256k1_secret_key.as_ref().unwrap().to_string(), stringify_data.clone());
+    
+        let pubkey = Wallet::generate_secp256k1_pubkey_from(contract.wallet.secp256k1_public_key.as_ref().unwrap().to_string()).unwrap();
+    
+        let keypair = Wallet::retrieve_secp256k1_keypair(
+            /* 
+                unwrap() takes the ownership of the type hence we must borrow 
+                the type before calling it using as_ref() 
+            */
+            contract.wallet.secp256k1_secret_key.as_ref().unwrap().as_str()
+        );
+    
+    
+        let verification_result = Wallet::verify_secp256k1_signature(stringify_data, signature, pubkey).unwrap();
+
+        data.signature = signature.to_string();
+        data.signed_at = chrono::Local::now().timestamp_nanos();
+
+        Self { wallet: contract.wallet.clone(), iat: contract.iat, owner: contract.owner, data: Some(data) }
+
+
+    }
+
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Data{
+    pub repo: String,
+    pub commits: u16,
+    pub budget: u16,
+    pub signed_at: i64,
+    pub signature: String
+}
+    

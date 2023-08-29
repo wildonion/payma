@@ -47,37 +47,25 @@ use wallet::{Wallet, Contract};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 
-    #[derive(Serialize, Deserialize)]
-    struct Data{
-        pub repo: String,
-        pub commits: u16,
-        pub budget: u16 
-    }
-    let data = Data{
-        repo: "github repo containing the code".to_string(), 
-        commits: 0u16,
-        budget: 50
-    };
-    let stringify_data = serde_json::to_string_pretty(&data).unwrap();
 
-    /* wallet operations */
-
-    let contract = Contract::new_with_secp256k1("wildonion");
-
-    let signature = Wallet::secp256k1_sign(contract.wallet.secp256k1_secret_key.as_ref().unwrap().to_string(), stringify_data.clone());
-
-    let pubkey = Wallet::generate_secp256k1_pubkey_from(contract.wallet.secp256k1_public_key.as_ref().unwrap().to_string()).unwrap();
-
-    let keypair = Wallet::retrieve_secp256k1_keypair(
-        /* 
-            unwrap() takes the ownership of the type hence we must borrow 
-            the type before calling it using as_ref() 
-        */
-        contract.wallet.secp256k1_secret_key.as_ref().unwrap().as_str()
+    let buffer_size = std::env::var("BUFFER_SIZE").unwrap_or("1024".to_string()).parse::<usize>().unwrap();
+    let host = std::env::var("HOST").unwrap();
+    let port = std::env::var("PORT").unwrap().parse::<u16>().unwrap();
+    let (deposit_tx_hash_sender, deposit_tx_hash_receiver) = tokio::sync::mpsc::channel::<String>(buffer_size);
+    let contract = Contract::init(
+        "payma", 
+        "".to_string(), 
+        10, 
+        50
     );
+    
+    tokio::spawn(async move{
 
 
-    let verification_result = Wallet::verify_secp256k1_signature(stringify_data, signature, pubkey).unwrap();
+        /* call deposit api */
+
+    });
+
 
 
     Ok(())     

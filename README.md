@@ -29,3 +29,14 @@ while let Ok(confirmed_commits) = get_employee_confirmation().await{
     
 }
 ```
+
+## 🚀 Build, Deploy, Publish on Thirdweb
+
+```bash
+# Compiles your contracts and detects thirdweb extensions implemented on them.
+yarn build
+# Deploys your contracts with the thirdweb deploy flow.
+yarn deploy
+# Publishes your contracts with the thirdweb publish flow.
+yarn publish
+```
