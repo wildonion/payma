@@ -10,7 +10,7 @@ payma is a WASM based virtual smart contract supports web3 crypto based `secp256
 
 - generate `secp256k1` keypair for both parties
 - employee deposit the full payment into the polygon split contract
-- on every 10 commits, confirmed by the employee followings will be transferred to the contractor and the payma wallet:
+- on for example every 10 commits, confirmed by the employee followings will be transferred to the contractor and the payma wallet:
 ```rust
 fn receive_amount(amount: u64, perc: u8) -> u64{
     let percent = Percentage::from(perc);
@@ -30,13 +30,22 @@ while let Ok(confirmed_commits) = get_employee_confirmation().await{
 }
 ```
 
-## 🚀 Build, Deploy, Publish on Thirdweb
+## 🚀 Create, Build, Deploy, Publish Contract on Thirdweb
 
 ```bash
+# Create contract 
+sudo npx thirdweb create contract && sudo chmod -R 777 .
 # Compiles your contracts and detects thirdweb extensions implemented on them.
 yarn build
 # Deploys your contracts with the thirdweb deploy flow.
 yarn deploy
 # Publishes your contracts with the thirdweb publish flow.
 yarn publish
+```
+
+## 🌋 Deploy Thirdweb fastapi Server
+
+```bash
+sudo docker build -t thirdweb -f $(pwd)/infra/docker/thirdweb/Dockerfile . --no-cache
+sudo docker run -d --restart unless-stopped --network gem --name thirdweb -p 7651:7650 thirdweb
 ```
