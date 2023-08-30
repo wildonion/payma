@@ -19,11 +19,6 @@ use web3::{
     types::{Address, TransactionParameters, H256, U256},
     Web3,
 };
-use themis::keys as themis_keys;
-use themis::secure_message::{SecureSign, SecureVerify};
-use themis::keygen::gen_ec_key_pair;
-use themis::keys::{EcdsaKeyPair, EcdsaPrivateKey, EcdsaPublicKey};
-use themis::keys::KeyPair as ThemisKeyPair;
 use secp256k1::hashes::Hash;
 use rand::random;
 

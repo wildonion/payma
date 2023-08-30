@@ -1890,16 +1890,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libthemis-sys"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37d8e6b36a0df4d0d1993726818f33cd7f804cf2ae467e9f3393967b9629ffd5"
-dependencies = [
- "cc",
- "pkg-config",
-]
-
-[[package]]
 name = "link-cplusplus"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2313,7 +2303,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "themis",
  "tiny-keccak 1.5.0",
  "tokio",
  "tokio-cron-scheduler",
@@ -3310,16 +3299,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be55cf8942feac5c765c2c993422806843c9a9a45d4d5c407ad6dd2ea95eb9b6"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "themis"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79b4e7844962bfcbd67915dad26bac5d87ea921e5fc74793121c8cfacb22076a"
-dependencies = [
- "libthemis-sys",
- "zeroize",
 ]
 
 [[package]]
@@ -4576,12 +4555,6 @@ checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
 ]
-
-[[package]]
-name = "zeroize"
-version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
 
 [[package]]
 name = "zstd"
