@@ -30,6 +30,18 @@ while let Ok(confirmed_commits) = get_employee_confirmation().await{
 }
 ```
 
+## 🎯 Run 
+
+```bash
+cargo run --bin payma
+```
+
+## 🏗️ Build WASM
+
+```bash 
+sudo chmod +x build.sh && ./build.sh
+```
+
 ## 🚀 Create, Build, Deploy, Publish Contract on Thirdweb
 
 ```bash
@@ -52,3 +64,10 @@ sudo docker network create -d bridge payma || true
 sudo docker build -t thirdweb -f $(pwd)/infra/docker/thirdweb/Dockerfile . --no-cache
 sudo docker run -d --restart unless-stopped --network payma --name thirdweb -p 7651:7650 thirdweb
 ```
+
+## 🚧 WIPs
+
+- wasm compilation
+- fastapi server to call thirdweb split contract apis
+- diagram 
+- split contract

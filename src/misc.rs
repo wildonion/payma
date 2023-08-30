@@ -5,9 +5,6 @@
     https://crates.io/crates/wasmtime
     https://wasmer.io/
 
-    TODO - wasm compilation
-    TODO - fastapi server to call thirdweb split contract apis
-
 */
 
 use serde::{Serialize, Deserialize};
