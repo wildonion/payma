@@ -21,12 +21,12 @@ use web3::{
 };
 use secp256k1::hashes::Hash;
 use rand::random;
+use wallexerr::*;
 
 
 pub mod misc;
 pub mod constants;
-pub mod wallet;
-use wallet::{Wallet, Contract};
+
 
 
 /*
@@ -47,22 +47,56 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     let repo = "".to_string();
     let cmd = "deposit";
 
-    let contract = Contract::init(
-        "0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4", 
+    let value = misc::Metadata{
         repo, 
-        10, 
-        50
+        budget: 10, 
+        commits: 50
+    };
+
+    /* --------------- */
+    /* wallexerr tests */
+    /* --------------- */
+    let mut data = DataBucket{
+        value: serde_json::to_string_pretty(&value).unwrap(), /* json stringify of config had instance */ 
+        signature: "".to_string(),
+        signed_at: 0,
+    };
+    let stringify_data = serde_json::to_string_pretty(&data.value).unwrap();
+
+    /* wallet operations */
+
+    let mut contract = Contract::new_with_secp256k1("0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4", "");
+    Wallet::save_to_json(&contract.wallet, "secp256k1").unwrap();
+    
+    let signature_hex = Wallet::secp256k1_sign(stringify_data.clone().as_str(), contract.wallet.secp256k1_secret_key.clone().unwrap().as_str());
+    let verify_res = Wallet::verify_secp256k1_signature_from_pubkey_str(data.value.as_str(), signature_hex.clone().to_string().as_str(), contract.wallet.secp256k1_public_key.clone().unwrap().as_str());
+
+    let keypair = Wallet::retrieve_secp256k1_keypair(
+        /* 
+            unwrap() takes the ownership of the type hence we must borrow 
+            the type before calling it using as_ref() 
+        */
+        contract.wallet.secp256k1_secret_key.as_ref().unwrap().as_str()
     );
+
+    /* fill the signature and signed_at fields if the signature was valid */
+    if verify_res.is_ok(){
+        data.signature = signature_hex.to_string();
+        data.signed_at = chrono::Local::now().timestamp_nanos();
+
+        contract.data = Some(data)
+    }
+
 
     let tx_hash = if cmd == "deposit"{
 
-        misc::deposit(contract.clone())
+        misc::deposit(&contract)
             .await
             .unwrap()
 
     } else{
 
-        misc::withdraw(contract.clone())
+        misc::withdraw(&contract)
             .await
             .unwrap()
 

@@ -71,3 +71,4 @@ sudo docker run -d --restart unless-stopped --network payma --name thirdweb -p 7
 - fastapi server to call thirdweb split contract apis
 - diagram 
 - split contract
+- cli args using clap

@@ -11,6 +11,15 @@ use serde::{Serialize, Deserialize};
 use std::fmt::Write;
 use crate::*;
 
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Metadata{
+    pub repo: String,
+    pub commits: u16,
+    pub budget: u16,
+}
+
+
 /* 
     don't include wallet module in here cause it main.rs modules 
     can't be accessible inside the wallet.rs since by using wallet 
@@ -18,7 +27,7 @@ use crate::*;
 */
 
 
-pub async fn deposit(contract: Contract) -> Result<String, Box<dyn std::error::Error + Send + Sync + 'static>>{
+pub async fn deposit(contract: &Contract) -> Result<String, Box<dyn std::error::Error + Send + Sync + 'static>>{
 
 
     let buffer_size = std::env::var("BUFFER_SIZE").unwrap_or("1024".to_string()).parse::<usize>().unwrap();
@@ -46,7 +55,7 @@ pub async fn deposit(contract: Contract) -> Result<String, Box<dyn std::error::E
 
 }
 
-pub async fn withdraw(contract: Contract) -> Result<String, Box<dyn std::error::Error + Send + Sync + 'static>>{
+pub async fn withdraw(contract: &Contract) -> Result<String, Box<dyn std::error::Error + Send + Sync + 'static>>{
     
     let buffer_size = std::env::var("BUFFER_SIZE").unwrap_or("1024".to_string()).parse::<usize>().unwrap();
     let host = std::env::var("HOST").unwrap();
