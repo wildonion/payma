@@ -67,8 +67,8 @@ sudo docker run -d --restart unless-stopped --network payma --name thirdweb -p 7
 
 ## 🚧 WIPs
 
-- wasm compilation
-- fastapi server to call thirdweb split contract apis
-- diagram 
-- split contract
+- code and deploy split contract
+- fastapi server using thirdweb sdk to call split contract apis
+- diagram
 - cli args using clap
+- wasm compilation
