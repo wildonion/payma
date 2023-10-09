@@ -3788,9 +3788,9 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "wallexerr"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7ec3dc71e95c1320806194cc3db8f56099e851a35495a74cb9d811d713fc6e3"
+checksum = "2e59c1769e9aae059ee2e25af38c423c40380a7ea53facc6dd9bc20b4ed490a4"
 dependencies = [
  "chrono",
  "hex",
@@ -3803,6 +3803,7 @@ dependencies = [
  "themis",
  "tiny-bip39",
  "tiny-keccak 1.5.0",
+ "tokio",
  "web3",
 ]
 
