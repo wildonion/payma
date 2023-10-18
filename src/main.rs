@@ -2,11 +2,8 @@
 
 use sha2::{Digest, Sha256};
 use std::fmt::Write;
-use ring::{signature as ring_signature, rand as ring_rand};
-use ring::signature::Ed25519KeyPair;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use ring::{signature::KeyPair, pkcs8::Document};
 use secp256k1::Secp256k1;
 use secp256k1::ecdsa::Signature;
 use secp256k1::{rand::SeedableRng, rand::rngs::StdRng, PublicKey, SecretKey, Message, hashes::sha256};
