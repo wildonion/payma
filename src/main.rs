@@ -60,9 +60,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     };
     let stringify_data = serde_json::to_string_pretty(&data.value).unwrap();
 
-    /* wallet operations */
-
-    let mut contract = Contract::new_with_secp256k1("0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4", "");
+    /* generaring keypair from existing mnemonic */
+    let existing_mnemonic_sample = Some("obot glare amazing hip saddle habit soft barrel sell fine document february");
+    let mut contract = Contract::new_with_secp256k1("0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4", "wildonion123", existing_mnemonic_sample);
+    
+    /* generaring a new keypair */
+    // let mut contract = Contract::new_with_secp256k1("0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4", "wildonion123", None);
+    
     Wallet::save_to_json(&contract.wallet, "secp256k1").unwrap();
     
     let signature_hex = Wallet::secp256k1_sign(stringify_data.clone().as_str(), contract.wallet.secp256k1_secret_key.clone().unwrap().as_str());
