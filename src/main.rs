@@ -71,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     
     let signature_hex = Wallet::secp256k1_sign(stringify_data.clone().as_str(), contract.wallet.secp256k1_secret_key.clone().unwrap().as_str());
     
-    let hash_of_data = Wallet::generate_sha256_from(&data.value);
+    let hash_of_data = Wallet::generate_keccak256_hash_from(&data.value);
     let verify_res = Wallet::verify_secp256k1_signature_from_pubkey_str(hash_of_data.as_slice(), signature_hex.clone().to_string().as_str(), contract.wallet.secp256k1_public_key.clone().unwrap().as_str());
     
     let keypair = Wallet::retrieve_secp256k1_keypair(
