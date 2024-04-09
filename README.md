@@ -67,6 +67,7 @@ sudo docker run -d --restart unless-stopped --network payma --name thirdweb -p 7
 
 ## 🚧 WIPs
 
+- update crates, rust edition, [wasm32 updation](https://blog.rust-lang.org/2024/04/09/updates-to-rusts-wasi-targets.html)
 - code and deploy split contract
 - fastapi server using thirdweb sdk to call split contract apis
 - diagram
