@@ -1,6 +1,8 @@
 
 
-
+<p align = "center">
+  <b>🚧 Payma was an idea about creating smart banking solutions to make a secure connections between two parties 🚧</b> 
+</p>
 
 payma is a WASM based virtual smart contract supports web3 crypto based `secp256k1` wallet on top of polygon chain to build trust with coworkers. It can also be used and injected as a `.wasm` file into `js` projects.
 
