@@ -4,8 +4,6 @@
   <b>🚧 Payma was an idea about creating smart banking solutions to make a secure connections between two parties 🚧</b> 
 </p>
 
-payma is a WASM based virtual smart contract supports web3 crypto based `secp256k1` wallet on top of polygon chain to build trust with coworkers. It can also be used and injected as a `.wasm` file into `js` projects.
-
 ## 🤝🏻 How it works 
 
 > note that the transfer process must be called by the payma authority itself.
@@ -37,41 +35,3 @@ while let Ok(confirmed_commits) = get_employee_confirmation().await{
 ```bash
 cargo run --bin payma
 ```
-
-## 🏗️ Build WASM
-
-```bash 
-sudo chmod +x build.sh && ./build.sh
-```
-
-## 🚀 Create, Build, Deploy, Publish Contract on Thirdweb
-
-```bash
-# Create contract 
-sudo npx thirdweb create contract && sudo chmod -R 777 .
-# Compiles contract and detects thirdweb extensions implemented on them.
-yarn build
-# Deploys contract with the thirdweb deploy flow.
-yarn deploy
-# Publishes contract with the thirdweb publish flow.
-yarn publish
-# Release contract publicly
-yarn release
-```
-
-## 🌋 Deploy Payma fastapi Server to Interact with Thirdweb
-
-```bash
-sudo docker network create -d bridge payma || true
-sudo docker build -t thirdweb -f $(pwd)/infra/docker/thirdweb/Dockerfile . --no-cache
-sudo docker run -d --restart unless-stopped --network payma --name thirdweb -p 7651:7650 thirdweb
-```
-
-## 🚧 WIPs
-
-- update crates, rust edition, [wasm32 updation](https://blog.rust-lang.org/2024/04/09/updates-to-rusts-wasi-targets.html)
-- code and deploy split contract
-- fastapi server using thirdweb sdk to call split contract apis
-- diagram
-- cli args using clap
-- wasm compilation
